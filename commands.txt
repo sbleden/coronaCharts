@@ -1,0 +1,6 @@
+docker container ls
+docker container stop corona_charts
+docker container rm corona_charts
+docker pull sbleden/corona_charts
+docker run -d -p 8080:80 --name=corona_charts sbleden/corona_charts
+docker container ls
