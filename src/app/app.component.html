@@ -1,34 +1,45 @@
 <div class="container-fluid">
+  <div *ngIf="show" class="row full-width">
+    <div class="col-md-1">
+      Fälle: {{current.count}}
+    </div>
+    <div class="col-md-1">
+      Genesen: {{current.recovered}}
+    </div>
+    <div class="col-md-1">
+      Verstorben: {{current.dead}}
+    </div>
+  </div>
   <div class="row full-width">
     <div class="col-md-6">
-      <canvas baseChart [datasets]="dailyTotalData" [labels]="dailyLabels" [options]="barChartOptions"
+      <canvas *ngIf="show" baseChart [datasets]="dailyTotalData" [labels]="dailyLabels" [options]="barChartOptions"
         [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
     </div>
     <div class="col-md-6">
-      <canvas baseChart [datasets]="dailyNewCasesData" [labels]="dailyLabels" [options]="barChartOptions"
+      <canvas *ngIf="show" baseChart [datasets]="dailyNewCasesData" [labels]="dailyLabels" [options]="barChartOptions"
         [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
     </div>
   </div>
   <div class="row full-width">
     <div class="col-md-6">
-      <canvas baseChart [datasets]="dailyNewCasesPercData" [labels]="dailyLabels" [options]="barChartOptions"
-        [legend]="barChartLegend" [chartType]="barChartType">
+      <canvas *ngIf="show" baseChart [datasets]="dailyNewCasesPercData" [labels]="dailyLabels"
+        [options]="barChartOptions" [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
     </div>
     <div class="col-md-6">
-      <canvas baseChart [datasets]="dailyDuplicateRate" [labels]="dailyLabels" [options]="barChartOptions"
+      <canvas *ngIf="show" baseChart [datasets]="dailyDuplicateRate" [labels]="dailyLabels" [options]="barChartOptions"
         [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
     </div>
   </div>
   <div class="row full-width">
-    <span>By: Bastian Pirk</span>
+    <div class="col-md-2">
+      <span>Quelle:
+        <a
+          href="https://www.zeit.de/wissen/gesundheit/2020-03/coronavirus-deutschland-infektionen-faelle-verbreitung-epidemie-karte">zeit.de</a></span>
+    </div>
   </div>
-  <div class="row full-width">
-    <span>Quelle:
-      <a
-        href="https://www.zeit.de/wissen/gesundheit/2020-03/coronavirus-deutschland-infektionen-faelle-verbreitung-epidemie-karte">zeit.de</a></span>
-  </div>
+
 </div>

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Label } from 'ng2-charts';
 import { ChartType, ChartDataSets, ChartOptions } from 'chart.js';
-import { DayData } from './model/data';
+import { DayData, Stats } from './model/data';
 
 @Component({
   selector: 'app-root',
@@ -33,14 +33,25 @@ export class AppComponent implements OnInit {
   public barChartType: ChartType = 'bar';
   public barChartLegend = true;
 
-  public dailyTotalData: ChartDataSets[] = [];
-  public dailyNewCasesData: ChartDataSets[] = [];
-  public dailyNewCasesPercData: ChartDataSets[] = [];
-  public dailyDuplicateRate: ChartDataSets[] = [];
+  public dailyTotalData: ChartDataSets[] = [{
+    data: [], label: '.'
+  }];
+  public dailyNewCasesData: ChartDataSets[] = [{
+    data: [], label: '.'
+  }];
+  public dailyNewCasesPercData: ChartDataSets[] = [{
+    data: [], label: '.'
+  }];
+  public dailyDuplicateRate: ChartDataSets[] = [{
+    data: [], label: '.'
+  }];
   public dailyLabels: Label[] = [];
+  public current: Stats;
+  public show = false;
 
+  constructor(private httpClient: HttpClient) {
 
-  constructor(private httpClient: HttpClient) { }
+  }
 
   ngOnInit() {
     this.httpClient.get<DayData>('https://interactive.zeit.de/cronjobs/2020/corona/germany.json').subscribe(
@@ -51,8 +62,11 @@ export class AppComponent implements OnInit {
   }
 
   handleResult(data: DayData) {
+    this.current = data.currentStats;
     let startDate = new Date(data.kreise.meta.historicalStats.start);
+    console.log("StartDate " + startDate.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }));
     let end = new Date(data.kreise.meta.historicalStats.end);
+    console.log("Enddate " + end.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }));
     let numDays = (end.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
     console.log("Number of Days is " + numDays);
     let days = this.calcDays(data, numDays);
@@ -71,8 +85,8 @@ export class AppComponent implements OnInit {
     let startDateToShow = this.calcStartDayToShow(days);
     startDate.setDate(startDate.getDate() + startDateToShow);
     for (let i = startDateToShow; i < days.length; i++) {
+      this.dailyLabels.push(startDate.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }));
       startDate.setDate(startDate.getDate() + 1);
-      this.dailyLabels.push(startDate.toLocaleDateString(undefined, {month: "numeric", day: "numeric"}));
       totalCases.push(days[i]);
       let newCasesOfDay = days[i] - days[i - 1];
       newCases.push(newCasesOfDay);
@@ -98,8 +112,9 @@ export class AppComponent implements OnInit {
       data: percNewCases, label: 'Neue Fälle %'
     }];
     this.dailyDuplicateRate = [{
-      data: duplicatedRate, label: 'Verdopplungsrate'
+      data: duplicatedRate, label: 'Verdopplungsrate in Tagen'
     }];
+    this.show = true;
   }
 
   calcStartDayToShow(days: number[]): number {
@@ -120,6 +135,7 @@ export class AppComponent implements OnInit {
       }
       days.push(sum);
     }
+    days.push(data.currentStats.count)
     return days;
   }
 }

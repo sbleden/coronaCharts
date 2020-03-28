@@ -1,6 +1,6 @@
 export class DayData {
     kreise: Kreise;
-
+    currentStats: Stats;
 }
 
 export class Day {
@@ -16,14 +16,14 @@ export class Kreise {
 export class Kreis {
     ags: number;
     historicalStats: HistoricalKreisStats;
-    currentStats: KreisStats;
+    currentStats: Stats;
 }
 
 export class KreisMeta {
     historicalStats: HistoricalStats;
 }
 
-export class KreisStats {
+export class Stats {
     count: number;
     recovered: number;
     dead: number;
