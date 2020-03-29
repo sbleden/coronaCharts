@@ -1,5 +1,8 @@
 <div class="container-fluid">
   <div *ngIf="show" class="row full-width">
+    <div class="col-md-2">
+      <h6>Aktuell Deutschland</h6>
+    </div>
     <div class="col-md-1">
       Fälle: {{current.count}}
     </div>
@@ -12,25 +15,29 @@
   </div>
   <div class="row full-width">
     <div class="col-md-6">
-      <canvas *ngIf="show" baseChart [datasets]="dailyTotalData" [labels]="dailyLabels" [options]="barChartOptions"
-        [legend]="barChartLegend" [chartType]="barChartType">
+      <h6 style="text-align: center">Fälle</h6>
+      <canvas *ngIf="show" baseChart [colors]="barChartColors" [datasets]="dailyTotalData" [labels]="dailyLabels"
+        [options]="barChartOptions" [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
     </div>
     <div class="col-md-6">
-      <canvas *ngIf="show" baseChart [datasets]="dailyNewCasesData" [labels]="dailyLabels" [options]="barChartOptions"
-        [legend]="barChartLegend" [chartType]="barChartType">
+      <h6 style="text-align: center">Neue Fälle</h6>
+      <canvas *ngIf="show" baseChart [colors]="barChartColors" [datasets]="dailyNewCasesData" [labels]="dailyLabels"
+        [options]="barChartOptions" [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
     </div>
   </div>
   <div class="row full-width">
     <div class="col-md-6">
-      <canvas *ngIf="show" baseChart [datasets]="dailyNewCasesPercData" [labels]="dailyLabels"
+      <h6 style="text-align: center">Neue Fälle % zum Vortag</h6>
+      <canvas *ngIf="show" baseChart [colors]="barChartColors" [datasets]="dailyNewCasesPercData" [labels]="dailyLabels"
         [options]="barChartOptions" [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
     </div>
     <div class="col-md-6">
-      <canvas *ngIf="show" baseChart [datasets]="dailyDuplicateRate" [labels]="dailyLabels" [options]="barChartOptions"
-        [legend]="barChartLegend" [chartType]="barChartType">
+      <h6 style="text-align: center">Verdopplungsrate</h6>
+      <canvas *ngIf="show" baseChart [colors]="barChartColors" [datasets]="dailyDuplicateRate" [labels]="dailyLabels"
+        [options]="barChartOptions" [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
     </div>
   </div>
@@ -41,5 +48,4 @@
           href="https://www.zeit.de/wissen/gesundheit/2020-03/coronavirus-deutschland-infektionen-faelle-verbreitung-epidemie-karte">zeit.de</a></span>
     </div>
   </div>
-
 </div>

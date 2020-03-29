@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Label } from 'ng2-charts';
+import { Label, Color } from 'ng2-charts';
 import { ChartType, ChartDataSets, ChartOptions } from 'chart.js';
-import { DayData, Stats } from './model/data';
+import { DayData, Stats, IntDayData, ChartData } from './model/data';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -30,6 +31,14 @@ export class AppComponent implements OnInit {
       }
     }
   };
+
+  public barChartColors: Color[] = [
+    { backgroundColor: 'red' },
+    { backgroundColor: 'green' },
+    { backgroundColor: 'blue' },
+    { backgroundColor: 'black' }
+  ]
+
   public barChartType: ChartType = 'bar';
   public barChartLegend = true;
 
@@ -54,29 +63,53 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.httpClient.get<DayData>('https://interactive.zeit.de/cronjobs/2020/corona/germany.json').subscribe(
-      res => {
-        this.handleResult(res);
+    let germanData = this.httpClient.get<DayData>('https://interactive.zeit.de/cronjobs/2020/corona/germany.json');
+    let intData = this.httpClient.get<IntDayData>('https://interactive.zeit.de/cronjobs/2020/corona/international-chronoloy.json');
+
+    forkJoin(germanData, intData).subscribe(
+      responseList => {
+        this.handleResult(responseList[0], responseList[1]);
       }
     );
   }
 
-  handleResult(data: DayData) {
-    this.current = data.currentStats;
-    let startDate = new Date(data.kreise.meta.historicalStats.start);
-    console.log("StartDate " + startDate.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }));
-    let end = new Date(data.kreise.meta.historicalStats.end);
-    console.log("Enddate " + end.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }));
-    let numDays = (end.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
-    console.log("Number of Days is " + numDays);
-    let days = this.calcDays(data, numDays);
-    console.log("Sums per day " + days);
-    this.showDayChart(startDate, days);
+  handleResult(gerDayData: DayData, intDaydata: IntDayData) {
+
+    let intEnd = new Date(intDaydata.lastDate);
+    let gerEnd = new Date(gerDayData.kreise.meta.historicalStats.end);
+    let offset = (gerEnd.getTime() - intEnd.getTime()) / 1000 / 60 / 60 / 24;
+
+    let gerData = this.createGerChartData(gerDayData);
+    let itData = this.createIntChartData(intDaydata, 'Italien', offset);
+    let spainData = this.createIntChartData(intDaydata, 'Spanien', offset);
+    let usData = this.createIntChartData(intDaydata, 'USA', offset);
+
+    this.showCartData(gerEnd, this.DAYS_TO_SHOW, [gerData, itData, spainData, usData]);
   }
 
+  createGerChartData(gerData: DayData): ChartData {
+    this.current = gerData.currentStats;
+    let startDate = new Date(gerData.kreise.meta.historicalStats.start);
+    let end = new Date(gerData.kreise.meta.historicalStats.end);
+    let numDays = (end.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
+    let days = this.calcDays(gerData, numDays);
+    return this.createChartData(startDate, days, 'Deutschland');
+  }
 
+  createIntChartData(intDatadata: IntDayData, country: string, offset: number): ChartData {
+    let startDate = new Date(intDatadata.firstDate);
+    let intEnd = new Date(intDatadata.lastDate);
+    let numDays = (intEnd.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
+    let days = this.calcDaysForCountry(intDatadata, numDays, country);
+    while (offset > 0) {
+      days.push(0);
+      offset--;
+    }
+    return this.createChartData(startDate, days, country);
+  }
 
-  showDayChart(startDate: Date, days: number[]) {
+  createChartData(startDate: Date, days: number[], country: string): ChartData {
+
     let newCases = [];
     let totalCases = [];
     let percNewCases = [];
@@ -85,7 +118,6 @@ export class AppComponent implements OnInit {
     let startDateToShow = this.calcStartDayToShow(days);
     startDate.setDate(startDate.getDate() + startDateToShow);
     for (let i = startDateToShow; i < days.length; i++) {
-      this.dailyLabels.push(startDate.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }));
       startDate.setDate(startDate.getDate() + 1);
       totalCases.push(days[i]);
       let newCasesOfDay = days[i] - days[i - 1];
@@ -97,23 +129,44 @@ export class AppComponent implements OnInit {
         if (days[k] < halfOfCurrent) {
           let delta = days[k + 1] - days[k];
           let toReach = halfOfCurrent - days[k];
-          duplicatedRate.push((i - k) + toReach / delta - 1);
+          duplicatedRate.push((i - k) - toReach / delta + 1);
           break;
         }
       }
     }
-    this.dailyTotalData = [{
-      data: totalCases, label: 'Fälle'
-    }];
-    this.dailyNewCasesData = [{
-      data: newCases, label: 'Neue Fälle'
-    }];
-    this.dailyNewCasesPercData = [{
-      data: percNewCases, label: 'Neue Fälle %'
-    }];
-    this.dailyDuplicateRate = [{
-      data: duplicatedRate, label: 'Verdopplungsrate in Tagen'
-    }];
+    return {
+      country, totalCases, newCasesData: newCases, newCasesPercData: percNewCases, duplicateRate: duplicatedRate
+    };
+  }
+
+  showCartData(endDate: Date, numDays: number, datas: ChartData[]) {
+    this.dailyLabels = []
+    endDate.setDate(endDate.getDate() - numDays);
+    for (let i = 0; i < numDays; i++) {
+      endDate.setDate(endDate.getDate() + 1);
+      this.dailyLabels.push(endDate.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }));
+    }
+
+
+    this.dailyTotalData = [];
+    this.dailyNewCasesData = [];
+    this.dailyNewCasesPercData = [];
+    this.dailyDuplicateRate = [];
+    for (let i = 0; i < datas.length; i++) {
+      let hidden = datas[i].country != 'Deutschland';
+      this.dailyTotalData.push({
+        data: datas[i].totalCases, label: datas[i].country, hidden
+      });
+      this.dailyNewCasesData.push({
+        data: datas[i].newCasesData, label: datas[i].country, hidden
+      });
+      this.dailyNewCasesPercData.push({
+        data: datas[i].newCasesPercData, label: datas[i].country, hidden
+      });
+      this.dailyDuplicateRate.push({
+        data: datas[i].duplicateRate, label: datas[i].country, hidden
+      });
+    }
     this.show = true;
   }
 
@@ -125,6 +178,14 @@ export class AppComponent implements OnInit {
     return startDateToShow;
   }
 
+  calcDaysForCountry(data: IntDayData, numDays: number, countryToShow: string): number[] {
+    for (let country of data.laender) {
+      if (country.land == countryToShow) {
+        return country.counts;
+      }
+    }
+    return [];
+  }
 
   calcDays(data: DayData, numDays: number): number[] {
     let days = [];

@@ -37,3 +37,23 @@ export class HistoricalStats {
     start: string;
     end: string;
 }
+
+export class IntDayData {
+    firstDate: string;
+    lastDate: string;
+    laender: IntCountryDayData[];
+}
+
+export class IntCountryDayData {
+    land: string;
+    counts: number[];
+    deaths: number[];
+}
+
+export class ChartData {
+    country: string;
+    totalCases: number[];
+    newCasesData: number[];
+    newCasesPercData: number[];
+    duplicateRate: number[]; 
+}
