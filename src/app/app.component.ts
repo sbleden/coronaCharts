@@ -4,6 +4,7 @@ import { Label, Color } from 'ng2-charts';
 import { ChartType, ChartDataSets, ChartOptions } from 'chart.js';
 import { DayData, Stats, IntDayData, ChartData } from './model/data';
 import { forkJoin } from 'rxjs';
+import { FormGroup, FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -36,7 +37,8 @@ export class AppComponent implements OnInit {
     { backgroundColor: 'red' },
     { backgroundColor: 'green' },
     { backgroundColor: 'blue' },
-    { backgroundColor: 'black' }
+    { backgroundColor: 'black' },
+    { backgroundColor: 'orange' }
   ]
 
   public barChartType: ChartType = 'bar';
@@ -57,12 +59,24 @@ export class AppComponent implements OnInit {
   public dailyLabels: Label[] = [];
   public current: Stats;
   public show = false;
+  public showCases = true;
+
+  reactiveForm: FormGroup = new FormGroup({
+    reactiveRadio: new FormControl(true)
+  })
 
   constructor(private httpClient: HttpClient) {
-
+    this.reactiveForm.controls['reactiveRadio'].valueChanges.subscribe((state: any) => {
+      this.showCases = state;
+      this.update();
+    })
   }
 
   ngOnInit() {
+    this.update();
+  }
+
+  update() {
     let germanData = this.httpClient.get<DayData>('https://interactive.zeit.de/cronjobs/2020/corona/germany.json');
     let intData = this.httpClient.get<IntDayData>('https://interactive.zeit.de/cronjobs/2020/corona/international-chronoloy.json');
 
@@ -77,22 +91,30 @@ export class AppComponent implements OnInit {
 
     let intEnd = new Date(intDaydata.lastDate);
     let gerEnd = new Date(gerDayData.kreise.meta.historicalStats.end);
-    let offset = (gerEnd.getTime() - intEnd.getTime()) / 1000 / 60 / 60 / 24;
+    let offset = gerEnd.getTime() > intEnd.getTime() ? 1 : 0;
+    this.current = gerDayData.currentStats;
 
-    let gerData = this.createGerChartData(gerDayData);
+    let gerData = this.createGerChartData(gerDayData, intDaydata, offset);
     let itData = this.createIntChartData(intDaydata, 'Italien', offset);
     let spainData = this.createIntChartData(intDaydata, 'Spanien', offset);
     let usData = this.createIntChartData(intDaydata, 'USA', offset);
+    let fraceData = this.createIntChartData(intDaydata, 'Frankreich', offset);
 
-    this.showCartData(gerEnd, this.DAYS_TO_SHOW, [gerData, itData, spainData, usData]);
+    this.showCartData(gerEnd, this.DAYS_TO_SHOW, [gerData, itData, spainData, usData, fraceData]);
   }
 
-  createGerChartData(gerData: DayData): ChartData {
-    this.current = gerData.currentStats;
-    let startDate = new Date(gerData.kreise.meta.historicalStats.start);
-    let end = new Date(gerData.kreise.meta.historicalStats.end);
-    let numDays = (end.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
-    let days = this.calcDays(gerData, numDays);
+  createGerChartData(gerData: DayData, intDatadata: IntDayData, offset: number): ChartData {
+    let startDate = new Date(intDatadata.firstDate);
+    let intEnd = new Date(intDatadata.lastDate);
+    let numDays = (intEnd.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
+    let days = this.calcDaysForCountry(intDatadata, numDays, 'Deutschland');
+    if (offset > 0) {
+      if (this.showCases) {
+        days.push(gerData.currentStats.count);
+      } else {
+        days.push(gerData.currentStats.dead);
+      }
+    }
     return this.createChartData(startDate, days, 'Deutschland');
   }
 
@@ -129,7 +151,7 @@ export class AppComponent implements OnInit {
         if (days[k] < halfOfCurrent) {
           let delta = days[k + 1] - days[k];
           let toReach = halfOfCurrent - days[k];
-          duplicatedRate.push((i - k) - toReach / delta + 1);
+          duplicatedRate.push((i - k) - toReach / delta);
           break;
         }
       }
@@ -181,7 +203,11 @@ export class AppComponent implements OnInit {
   calcDaysForCountry(data: IntDayData, numDays: number, countryToShow: string): number[] {
     for (let country of data.laender) {
       if (country.land == countryToShow) {
-        return country.counts;
+        if (this.showCases) {
+          return country.counts;
+        } else {
+          return country.deaths;
+        }
       }
     }
     return [];
