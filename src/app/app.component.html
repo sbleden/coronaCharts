@@ -1,31 +1,50 @@
 <div class="container-fluid">
   <div *ngIf="show" class="row full-width">
-    <div class="col-md-2">
-      <h6>Aktuell Deutschland</h6>
+    <div class="col-md-6">
+      <h5>Aktuell Deutschland ({{lastUpdate | date:short}} von <a
+          href="https://www.zeit.de/wissen/gesundheit/2020-03/coronavirus-deutschland-infektionen-faelle-verbreitung-epidemie-karte">zeit.de</a>)
+      </h5>
     </div>
+  </div>
+  <div *ngIf="show" class="row full-width">
     <div class="col-md-2">
-      <strong>Fälle Aktiv / Gesamt:</strong> {{current.count-(current.recovered+current.dead) | number:'3.0-3':'de'}} / {{current.count | number:'3.0-3':'de'}}
+      <strong>Fälle Aktiv / Gesamt:</strong> {{current.count-(current.recovered+current.dead) | number:'3.0-3':'de'}} /
+      {{current.count | number:'3.0-3':'de'}}
     </div>
     <div class="col-md-1">
       <strong>Genesen:</strong> {{current.recovered | number:'3.0-3':'de'}}
     </div>
-    <div class="col-md-1">
+    <div class="col-md-2">
       <strong>Verstorben:</strong> {{current.dead | number:'3.0-3':'de'}}
+    </div>
+  </div>
+  <div *ngIf="show" class="row full-width headline">
+    <div class="col-md-3">
+      <h5>Historische Daten (Quelle: <a href="https://coronavirus.jhu.edu/map.html">John Hoppkins</a>)</h5>
     </div>
   </div>
   <div *ngIf="show" class="row full-width">
     <div class="col-md-3">
       <form [formGroup]="reactiveForm">
         <div class="form-check">
-          <input type="radio" class="form-check-input" id="materialUnchecked2" [value]="true"
-            formControlName="reactiveRadio" name="reactiveRadio">
-          <label class="form-check-label" for="materialUnchecked2">Fälle</label>
+          <input type="radio" class="form-check-input" id="materialUnchecked2" [value]="3"
+            formControlName="reactiveRadio" name="reactiveRadio" checked>
+          <label class="form-check-label" for="materialUnchecked2">Fälle Aktiv</label>
         </div>
-
         <div class="form-check">
-          <input type="radio" class="form-check-input" id="materialChecked2" [value]="false"
-            formControlName="reactiveRadio" name="reactiveRadio">
+          <input type="radio" class="form-check-input" id="materialUnchecked2" [value]="0"
+            formControlName="reactiveRadio" name="reactiveRadio" checked>
+          <label class="form-check-label" for="materialUnchecked2">Fälle Gesamt</label>
+        </div>
+        <div class="form-check">
+          <input type="radio" class="form-check-input" id="materialChecked2" [value]="1" formControlName="reactiveRadio"
+            name="reactiveRadio">
           <label class="form-check-label" for="materialChecked2">Verstorben</label>
+        </div>
+        <div class="form-check">
+          <input type="radio" class="form-check-input" id="materialChecked2" [value]="2" formControlName="reactiveRadio"
+            name="reactiveRadio">
+          <label class="form-check-label" for="materialChecked2">Genesen</label>
         </div>
       </form>
     </div>
@@ -56,13 +75,6 @@
       <canvas *ngIf="show" width="1" height="1" baseChart [colors]="barChartColors" [datasets]="dailyDuplicateRate"
         [labels]="dailyLabels" [options]="barChartOptions" [legend]="barChartLegend" [chartType]="barChartType">
       </canvas>
-    </div>
-  </div>
-  <div class="row full-width">
-    <div class="col-md-2">
-      <span>Quelle:
-        <a
-          href="https://www.zeit.de/wissen/gesundheit/2020-03/coronavirus-deutschland-infektionen-faelle-verbreitung-epidemie-karte">zeit.de</a></span>
     </div>
   </div>
 </div>

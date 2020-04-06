@@ -1,6 +1,7 @@
 export class DayData {
     kreise: Kreise;
     currentStats: Stats;
+    lastUpdate: string;
 }
 
 export class Day {
@@ -55,5 +56,5 @@ export class ChartData {
     totalCases: number[];
     newCasesData: number[];
     newCasesPercData: number[];
-    duplicateRate: number[]; 
+    duplicateRate: number[];
 }
