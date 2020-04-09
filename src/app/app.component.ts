@@ -6,6 +6,11 @@ import { DayData, Stats, IntDayData, ChartData } from './model/data';
 import { forkJoin } from 'rxjs';
 import { FormGroup, FormControl } from '@angular/forms';
 
+interface Option {
+  value: number;
+  viewValue: string;
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -14,16 +19,21 @@ import { FormGroup, FormControl } from '@angular/forms';
 export class AppComponent implements OnInit {
   title = 'app';
 
-  public DAYS_TO_SHOW = 15;
+  options: Option[] = [
+    { value: 3, viewValue: 'Fälle Aktiv' },
+    { value: 0, viewValue: 'Fälle Gesamt' },
+    { value: 2, viewValue: 'Genesen' },
+    { value: 2, viewValue: 'Verstorben' }
+  ];
+
+  daysOptions: number[] = [15, 20, 25, 30, 40, 50];
+  countries: string[] = ['Germany', 'Italy', 'Spain', 'France', 'US','United Kingdom','Switzerland','Norway'];
+
   public barChartOptions: ChartOptions = {
     responsive: true,
     // We use these empty structures as placeholders for dynamic theming.
     scales: {
-      xAxes: [{}], yAxes: [{
-        ticks: {
-          min: 0
-        }
-      }]
+      xAxes: [{}], yAxes: [{}]
     },
     plugins: {
       datalabels: {
@@ -60,20 +70,23 @@ export class AppComponent implements OnInit {
   public current: Stats;
   public show = false;
   public showCases = 0;
+  public daysTohow = 15;
   public lastUpdate;
-
-  reactiveForm: FormGroup = new FormGroup({
-    reactiveRadio: new FormControl(0)
-  })
+  public countriesForm = new FormControl();
 
   constructor(private httpClient: HttpClient) {
-    this.reactiveForm.controls['reactiveRadio'].valueChanges.subscribe((state: any) => {
-      this.showCases = state;
-      this.update();
-    })
+    this.countriesForm.setValue(['Germany']);
   }
 
   ngOnInit() {
+    this.update();
+  }
+
+  optionChanged(event: any) {
+    this.update();
+  }
+
+  optionCountryChanged(event: any) {
     this.update();
   }
 
@@ -92,9 +105,9 @@ export class AppComponent implements OnInit {
   handleHoppinsData(count: string, deaths: string, recovered: string) {
 
     let dates = this.getDates(count);
-    let countries = ['Germany', 'Italy', 'Spain', 'France', 'US'];
+    let countries = this.countriesForm.value;
     let datas = countries.map(c => this.createDataForCountry(count, deaths, recovered, c));
-    this.showCartData(dates.endDate, this.DAYS_TO_SHOW, datas);
+    this.showCartData(dates.endDate, this.daysTohow, datas);
   }
 
   private createDataForCountry(count: string, deaths: string, rescovered: string, country: string): ChartData {
@@ -187,25 +200,24 @@ export class AppComponent implements OnInit {
     this.dailyNewCasesPercData = [];
     this.dailyDuplicateRate = [];
     for (let i = 0; i < datas.length; i++) {
-      let hidden = datas[i].country != 'Germany';
       this.dailyTotalData.push({
-        data: datas[i].totalCases, label: datas[i].country, hidden
+        data: datas[i].totalCases, label: datas[i].country
       });
       this.dailyNewCasesData.push({
-        data: datas[i].newCasesData, label: datas[i].country, hidden
+        data: datas[i].newCasesData, label: datas[i].country
       });
       this.dailyNewCasesPercData.push({
-        data: datas[i].newCasesPercData, label: datas[i].country, hidden
+        data: datas[i].newCasesPercData, label: datas[i].country
       });
       this.dailyDuplicateRate.push({
-        data: datas[i].duplicateRate, label: datas[i].country, hidden
+        data: datas[i].duplicateRate, label: datas[i].country
       });
     }
     this.show = true;
   }
 
   calcStartDayToShow(days: number[]): number {
-    let startDateToShow = days.length - this.DAYS_TO_SHOW;
+    let startDateToShow = days.length - this.daysTohow;
     if (startDateToShow < 1) {
       startDateToShow = 1;
     }

@@ -24,29 +24,35 @@
     </div>
   </div>
   <div *ngIf="show" class="row full-width">
-    <div class="col-md-3">
-      <form [formGroup]="reactiveForm">
-        <div class="form-check">
-          <input type="radio" class="form-check-input" id="materialUnchecked2" [value]="3"
-            formControlName="reactiveRadio" name="reactiveRadio" checked>
-          <label class="form-check-label" for="materialUnchecked2">Fälle Aktiv</label>
-        </div>
-        <div class="form-check">
-          <input type="radio" class="form-check-input" id="materialUnchecked2" [value]="0"
-            formControlName="reactiveRadio" name="reactiveRadio" checked>
-          <label class="form-check-label" for="materialUnchecked2">Fälle Gesamt</label>
-        </div>
-        <div class="form-check">
-          <input type="radio" class="form-check-input" id="materialChecked2" [value]="1" formControlName="reactiveRadio"
-            name="reactiveRadio">
-          <label class="form-check-label" for="materialChecked2">Verstorben</label>
-        </div>
-        <div class="form-check">
-          <input type="radio" class="form-check-input" id="materialChecked2" [value]="2" formControlName="reactiveRadio"
-            name="reactiveRadio">
-          <label class="form-check-label" for="materialChecked2">Genesen</label>
-        </div>
-      </form>
+    <div class="col-md-2">
+      <mat-form-field>
+        <mat-label>Optionen</mat-label>
+        <mat-select [(value)]="showCases" (selectionChange)="optionChanged($event)">
+          <mat-option *ngFor="let option of options" [value]="option.value">
+            {{option.viewValue}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="col-md-2">
+      <mat-form-field>
+        <mat-label>Länder</mat-label>
+        <mat-select [formControl]="countriesForm" (selectionChange)="optionCountryChanged($event)" multiple>
+          <mat-option *ngFor="let country of countries" [value]="country">
+            {{country}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="col-md-2">
+      <mat-form-field>
+        <mat-label>Anzahl Tage</mat-label>
+        <mat-select [(value)]="daysTohow" (selectionChange)="optionChanged($event)">
+          <mat-option *ngFor="let dayOption of daysOptions" [value]="dayOption">
+            {{dayOption}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
   </div>
   <div class="row full-width">
